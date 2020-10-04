@@ -5,7 +5,11 @@ This app is intended to ease shooting in manual and aperture priority mode. It u
 
 ## Installation ##
 
-Use [Sony-PMCA-RE](https://github.com/ma1co/Sony-PMCA-RE) 
+1. Download Apk
+2. Download and install [PMCA GUI](https://github.com/ma1co/Sony-PMCA-RE/releases/tag/v0.17) 
+3. Set A7S usb mode to MTP and connect USB cable
+3. In PMCA-GUI check "Select an apk" and select the APK
+4. Press Install Selected APK
 
 ## Usage and features ##
 
