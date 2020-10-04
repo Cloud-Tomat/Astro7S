@@ -24,6 +24,8 @@ import com.sony.scalar.sysutil.didep.Settings;
 import java.io.IOException;
 import java.util.List;
 
+import static java.lang.String.valueOf;
+
 public class ManualActivity extends BaseActivity implements SurfaceHolder.Callback, View.OnClickListener, CameraEx.ShutterListener, CameraEx.ShutterSpeedChangeListener
 {
     private static final boolean LOGGING_ENABLED = false;
@@ -73,6 +75,21 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private int             m_timelapsePicsTaken;
     private int             m_countdown;
     private static final int COUNTDOWN_SECONDS = 5;
+
+
+    //ScanCode
+    private static final int BUT_FRONT_CW=525;
+    private static final int BUT_FRONT_CCW=526;
+    private static final int BUT_REAR_CW=528;
+    private static final int BUT_REAR_CCW=529;
+    private static final int BUT_ISO_CW=635;
+    private static final int BUT_ISO_CCW=634;
+    private static final int BUT_C1=622;
+    private static final int BUT_C2=623;
+
+
+
+
     private final Runnable  m_timelapseRunnable = new Runnable()
     {
         @Override
@@ -482,6 +499,13 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_camera.createParametersModifier(params).setISOSensitivity(iso);
         m_camera.getNormalCamera().setParameters(params);
     }
+
+    private void setSilentShutter() {
+        Camera.Parameters params = m_camera.createEmptyParameters();
+        m_camera.createParametersModifier(params).setSilentShutterMode(true);
+        m_camera.getNormalCamera().setParameters(params);
+    }
+
 
     private int getPreviousIso(int current)
     {
@@ -1115,6 +1139,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             log(sb.toString());
         }
         */
+
+        setSilentShutter();
     }
 
     @Override
@@ -1580,7 +1606,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         {
             switch (m_dialMode)
             {
-                case shutter:
+/*                case shutter:
                     if (value > 0)
                         m_camera.incrementShutterSpeed();
                     else
@@ -1603,6 +1629,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
                     else
                         incrementExposureCompensation(false);
                     break;
+  */
                 case timelapseSetInterval:
                     if (value < 0)
                         decrementTimelapseInterval();
@@ -1930,12 +1957,54 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
         final int scanCode = event.getScanCode();
+        showMessage((valueOf(scanCode)));
         if (m_timelapseActive && scanCode != ScalarInput.ISV_KEY_ENTER)
             return true;
+
+        if (scanCode==520)
+        {
+            //APSC();
+        }
+
+
+        //ISO Speed
+        if (scanCode==BUT_ISO_CW)
+        {
+            int iso =  getNextIso(m_curIso);
+            if (iso== m_supportedIsos.get(m_supportedIsos.size() - 1))
+                iso=(m_supportedIsos.get(1));
+            setIso(iso);
+
+        }
+
+        if (scanCode==BUT_ISO_CCW)
+        {
+            final int iso =  getPreviousIso(m_curIso);
+            if (iso != 0)
+                setIso(iso);
+            else
+                setIso(m_supportedIsos.get(m_supportedIsos.size() - 1));
+
+        }
+        if (scanCode==BUT_FRONT_CW)
+            m_camera.incrementShutterSpeed();
+
+        if (scanCode==BUT_FRONT_CCW)
+            m_camera.decrementShutterSpeed();
+
+        if (scanCode==BUT_REAR_CW)
+            m_camera.incrementAperture();
+
+        if (scanCode==BUT_REAR_CCW)
+            m_camera.decrementAperture();
+
+
         // TODO: Use m_supportedPreviewMagnifications
         if (m_dialMode != DialMode.timelapseSetInterval && m_dialMode != DialMode.timelapseSetPicCount)
         {
-            if (scanCode == 610 && !m_zoomLeverPressed)
+            //original scancode 610
+            //622 =C1
+            if (scanCode == BUT_C1) // && !m_zoomLeverPressed)
             {
                 // zoom lever tele
                 m_zoomLeverPressed = true;
@@ -1949,7 +2018,9 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
                 m_camera.setPreviewMagnification(m_curPreviewMagnification, m_curPreviewMagnificationPos);
                 return true;
             }
-            else if (scanCode == 611 && !m_zoomLeverPressed)
+            //original scancode 611
+            // 623 = C2
+            else if (scanCode == BUT_C2) // && !m_zoomLeverPressed)
             {
                 // zoom lever wide
                 m_zoomLeverPressed = true;
@@ -1963,6 +2034,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
                     m_curPreviewMagnification = 0;
                     m_camera.stopPreviewMagnification();
                 }
+                showMessage((valueOf(m_curPreviewMagnification)));
                 return true;
             }
             else if (scanCode == 645)
@@ -1974,6 +2046,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         }
         return super.onKeyDown(keyCode, event);
     }
+
 
     @Override
     public void surfaceCreated(SurfaceHolder holder)
