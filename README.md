@@ -1,4 +1,4 @@
-# BetterManual
+# BetterManual-A7S
 
 This app is intended to ease shooting in manual and aperture priority mode. It uses the [OpenMemories Framework](https://github.com/ma1co/OpenMemories-Framework).
 
