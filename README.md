@@ -1,15 +1,16 @@
 # BetterManual
 
-This app is intended to ease shooting in manual and aperture priority mode with (legacy) prime lenses on the A5100 camera. It uses the [OpenMemories Framework](https://github.com/ma1co/OpenMemories-Framework).
-**While the app may work on other cameras, it was written specifically for use with the A5100.**
+This app is intended to ease shooting in manual and aperture priority mode. It uses the [OpenMemories Framework](https://github.com/ma1co/OpenMemories-Framework).
+**This APP is an adaptation of BetterManual App to A7S.**
 
 ## Installation ##
 
-Use [Sony-PMCA-RE](https://github.com/ma1co/Sony-PMCA-RE) or install through [sony-pmca.appspot.com](https://sony-pmca.appspot.com/apps).
+Use [Sony-PMCA-RE](https://github.com/ma1co/Sony-PMCA-RE) 
 
 ## Usage and features ##
 
-Features are accessed using either the touch screen or the control wheel.
+Navigation through the menu by presing the DOWN key
+Selected menu is Highlited in Green
 
 ### Shooting modes ###
 
