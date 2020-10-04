@@ -14,7 +14,6 @@ This app is intended to ease shooting in manual and aperture priority mode. It u
 ## Usage and features ##
 
 Navigation through the menu by presing the DOWN key
-Selected menu is Highlited in Green
 
 ### Shooting modes ###
 
