@@ -855,9 +855,10 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_camera.startDirectShutter();
         m_autoReviewControl = new CameraEx.AutoPictureReviewControl();
         m_camera.setAutoPictureReviewControl(m_autoReviewControl);
-        // Disable picture review
+        // Enable  picture review
         m_pictureReviewTime = m_autoReviewControl.getPictureReviewTime();
-        m_autoReviewControl.setPictureReviewTime(0);
+        m_autoReviewControl.setPictureReviewTime(10);
+
 
         m_vGrid.setVideoRect(getDisplayManager().getDisplayedVideoRect());
 
