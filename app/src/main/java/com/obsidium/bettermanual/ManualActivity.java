@@ -1598,6 +1598,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     @Override
     protected boolean onUpperDialChanged(int value)
     {
+        //showMessage((valueOf(value)));
         if (m_curPreviewMagnification != 0)
         {
             movePreviewHorizontal(value * (int)(500.0f / m_curPreviewMagnificationFactor));
@@ -1958,10 +1959,16 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
         final int scanCode = event.getScanCode();
-        showMessage((valueOf(scanCode)));
+        //showMessage((valueOf(scanCode)));
         if (m_timelapseActive && scanCode != ScalarInput.ISV_KEY_ENTER)
+        {
             return true;
-
+        }
+        if ((m_dialMode == DialMode.timelapseSetInterval || m_dialMode == DialMode.timelapseSetPicCount)&&scanCode != ScalarInput.ISV_KEY_ENTER)
+        {
+            //showMessage((valueOf(m_dialMode)));
+            return super.onKeyDown(keyCode, event);
+        }
         if (scanCode==520)
         {
             //APSC();
