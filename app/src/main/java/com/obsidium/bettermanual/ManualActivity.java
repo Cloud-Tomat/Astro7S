@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.github.ma1co.pmcademo.app.BaseActivity;
 import com.sony.scalar.hardware.CameraEx;
+import com.sony.scalar.hardware.avio.DisplayManager;
 import com.sony.scalar.sysutil.ScalarInput;
 import com.sony.scalar.sysutil.didep.Settings;
 
@@ -75,7 +76,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private int             m_timelapsePicsTaken;
     private int             m_countdown;
     private static final int COUNTDOWN_SECONDS = 5;
-
+    private int             m_DisplayStatus=1;
 
     //ScanCode
     private static final int BUT_FRONT_CW=525;
@@ -86,6 +87,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private static final int BUT_ISO_CCW=634;
     private static final int BUT_C1=622;
     private static final int BUT_C2=623;
+    private static final int BUT_AEL=638;
+
 
 
 
@@ -805,6 +808,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         if (paramsModifier.isSupportedLongExposureNR())
             modifier.setLongExposureNR(false);
         m_camera.getNormalCamera().setParameters(params);
+
+
     }
 
     private void loadDefaults()
@@ -1955,11 +1960,37 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         return true;
     }
 
+    private void SetDisplayOnOff(int DisplayStatus)
+    {
+        com.sony.scalar.hardware.avio.DisplayManager Display=getDisplayManager();
+        if (DisplayStatus==1)
+        {
+            m_autoReviewControl.setPictureReviewTime(10);
+           Display.switchDisplayOutputTo(DisplayManager.DEVICE_ID_NONE);
+        }
+        else
+        {
+            m_autoReviewControl.setPictureReviewTime(0);
+            Display.switchDisplayOutputTo(DisplayManager.DEVICE_ID_PANEL);
+        }
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
         final int scanCode = event.getScanCode();
         //showMessage((valueOf(scanCode)));
+
+        if (scanCode==BUT_AEL)
+        {
+            if (m_DisplayStatus == 1)
+                m_DisplayStatus=0;
+            else
+                m_DisplayStatus=1;
+
+            SetDisplayOnOff(m_DisplayStatus);
+        }
+
         if (m_timelapseActive && scanCode != ScalarInput.ISV_KEY_ENTER)
         {
             return true;
@@ -1973,6 +2004,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         {
             //APSC();
         }
+
 
 
         //ISO Speed
