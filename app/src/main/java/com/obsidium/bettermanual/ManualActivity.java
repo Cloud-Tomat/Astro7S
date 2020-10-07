@@ -1963,7 +1963,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private void SetDisplayOnOff(int DisplayStatus)
     {
         com.sony.scalar.hardware.avio.DisplayManager Display=getDisplayManager();
-        if (DisplayStatus==1)
+        if (DisplayStatus==0)
         {
             m_autoReviewControl.setPictureReviewTime(10);
            Display.switchDisplayOutputTo(DisplayManager.DEVICE_ID_NONE);
@@ -1987,7 +1987,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
                 m_DisplayStatus=0;
             else
                 m_DisplayStatus=1;
-
+            //showMessage((valueOf(m_DisplayStatus)));
             SetDisplayOnOff(m_DisplayStatus);
         }
 
