@@ -1,6 +1,6 @@
-# BetterManual-A7S
+# Astro7S
 
-This app is intended to ease shooting in manual and aperture priority mode. It uses the [OpenMemories Framework](https://github.com/ma1co/OpenMemories-Framework).
+This app is intended to ease shooting in manual mode. It uses the [OpenMemories Framework](https://github.com/ma1co/OpenMemories-Framework).
 
 **This APP is an adaptation of [BetterManual](https://github.com/obs1dium/BetterManual)  App to A7S.**
 
