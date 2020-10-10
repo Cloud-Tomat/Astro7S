@@ -77,7 +77,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/ivBracket"
+        android:id="@+id/ivNotUsed1"
         android:layout_below="@+id/ivTimelapse"
         android:layout_alignLeft="@+id/ivTimelapse"
         android:paddingTop="6dp"
@@ -234,22 +234,21 @@
                 />
 
             <TextView
+                android:id="@+id/tvAPSC"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textSize="22dp"
-                tools:text="EV"
-                android:id="@+id/tvExposureCompensation"
-                android:layout_weight="1"
-                android:gravity="bottom|center_horizontal"
-                android:textColor="@android:color/white"
-                tools:background="#502080"
-                android:clickable="true"
-                android:singleLine="true"
-                android:ellipsize="none"
                 android:layout_gravity="bottom"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:ellipsize="none"
+                android:gravity="bottom|center_horizontal"
                 android:paddingTop="12dp"
-                />
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@android:color/white"
+                android:textSize="22dp"
+                tools:background="#502080"
+                tools:text="APSC" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -259,36 +258,35 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/lExposure">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textSize="22dp"
-                tools:text="EV"
-                android:id="@+id/tvExposure"
-                android:gravity="bottom"
-                android:textColor="@android:color/white"
-                android:clickable="true"
-                android:singleLine="true"
-                android:ellipsize="none"
-                android:layout_gravity="bottom"
-                android:paddingTop="12dp"
-                />
+                <TextView
+                    android:id="@+id/tvNotUsed2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:clickable="true"
+                    android:ellipsize="none"
+                    android:gravity="bottom"
+                    android:paddingTop="12dp"
+                    android:singleLine="true"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@android:color/white"
+                    android:textSize="22dp"
+                    tools:text="NU" />
             </LinearLayout>
         </TableRow>
 
     </TableLayout>
 
     <TextView
+        android:id="@+id/tvHint"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        tools:text="Hint"
-        android:id="@+id/tvHint"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="4dp"
+        android:layout_marginTop="68dp"
+        android:layout_marginBottom="4dp"
+        android:ellipsize="none"
         android:gravity="center_horizontal"
-        android:ellipsize="none"/>
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        tools:text="Hint" />
 
 </RelativeLayout>
