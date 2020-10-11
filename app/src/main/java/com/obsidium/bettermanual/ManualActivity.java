@@ -29,7 +29,7 @@ import java.util.List;
 
 import static java.lang.String.valueOf;
 
-public class ManualActivity extends BaseActivity implements SurfaceHolder.Callback, CameraEx.ShutterListener, CameraEx.ShutterSpeedChangeListener
+public class ManualActivity extends BaseActivity implements SurfaceHolder.Callback, CameraEx.ShutterListener
 {
     private static final boolean LOGGING_ENABLED = false;
     private static final int MESSAGE_TIMEOUT = 1000;
@@ -80,7 +80,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private static final int BUT_AEL=638;
 
 
-
+    private cCameraControl m_cmaeraControl;
+    private cExposureControl m_exposureControl;
 
 
     private final Runnable  m_timelapseRunnable = new Runnable()
@@ -120,22 +121,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         }
     };
 
-    // ISO
-    private int             m_curIso;
-    private List<Integer>   m_supportedIsos;
-
-    // Shutter speed
-    private boolean         m_notifyOnNextShutterSpeedChange;
-
-    // Aperture
-    private boolean         m_notifyOnNextApertureChange;
-    private boolean         m_haveApertureControl;
-
-    // Exposure compensation
-    private int             m_maxExposureCompensation;
-    private int             m_minExposureCompensation;
-    private int             m_curExposureCompensation;
-    private float           m_exposureCompensationStep;
 
     // Preview magnification
     private List<Integer>   m_supportedPreviewMagnifications;
@@ -188,8 +173,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_surfaceHolder = surfaceView.getHolder();
         m_surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
-        // not needed - appears to be the default font
-        //final Typeface sonyFont = Typeface.createFromFile("system/fonts/Sony_DI_Icons.ttf");
 
         m_tvMsg = (TextView)findViewById(R.id.tvMsg);
         m_tvAperture = (TextView)findViewById(R.id.tvAperture);
@@ -200,6 +183,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
         m_Apsc.setText("FULL");
         m_Apsc.setVisibility(View.VISIBLE);
+
 
 
         m_tvLog = (TextView)findViewById(R.id.tvLog);
@@ -260,62 +244,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         if (LOGGING_ENABLED)
             m_tvLog.append(str);
     }
-    
-    private void setIso(int iso)
-    {
-        //log("setIso: " + String.valueOf(iso) + "\n");
-        m_curIso = iso;
-        m_tvISO.setText(String.format("\uE488 %s", (iso == 0 ? "AUTO" : String.valueOf(iso))));
-        Camera.Parameters params = m_camera.createEmptyParameters();
-        m_camera.createParametersModifier(params).setISOSensitivity(iso);
-        m_camera.getNormalCamera().setParameters(params);
-    }
-
-    private void setSilentShutter() {
-        Camera.Parameters params = m_camera.createEmptyParameters();
-        m_camera.createParametersModifier(params).setSilentShutterMode(true);
-        m_camera.getNormalCamera().setParameters(params);
-    }
 
 
-    private int getPreviousIso(int current)
-    {
-        int previous = 0;
-        for (Integer iso : m_supportedIsos)
-        {
-            if (iso == current)
-                return previous;
-            else
-                previous = iso;
-        }
-        return 0;
-    }
-
-    private int getNextIso(int current)
-    {
-        boolean next = false;
-        for (Integer iso : m_supportedIsos)
-        {
-            if (next)
-                return iso;
-            else if (iso == current)
-                next = true;
-        }
-        return current;
-    }
-
-
-
-    private void updateShutterSpeed(int n, int d)
-    {
-        final String text = CameraUtil.formatShutterSpeed(n, d);
-        m_tvShutter.setText(text);
-        if (m_notifyOnNextShutterSpeedChange)
-        {
-            showMessage(text);
-            m_notifyOnNextShutterSpeedChange = false;
-        }
-    }
 
 
 
@@ -510,6 +440,10 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     {
         super.onResume();
         m_camera = CameraEx.open(0, null);
+
+        m_exposureControl=new cExposureControl(m_camera);
+        m_cmaeraControl=new cCameraControl(m_camera);
+
         m_surfaceHolder.addCallback(this);
         m_camera.startDirectShutter();
         m_autoReviewControl = new CameraEx.AutoPictureReviewControl();
@@ -538,53 +472,17 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             }
         });
 
-        // ISO
-        m_camera.setAutoISOSensitivityListener(new CameraEx.AutoISOSensitivityListener()
-        {
-            @Override
-            public void onChanged(int i, CameraEx cameraEx)
-            {
-                //log("AutoISOChanged " + String.valueOf(i) + "\n");
-                m_tvISO.setText("\uE488 " + String.valueOf(i) + (m_curIso == 0 ? "(A)" : ""));
-            }
-        });
+
 
         // Shutter
-        m_camera.setShutterSpeedChangeListener(this);
+
         m_camera.setShutterListener(this);
+        m_tvAperture.setVisibility(m_exposureControl.haveApertureControl() ? View.VISIBLE : View.GONE);
 
 
-        // Aperture
-        m_camera.setApertureChangeListener(new CameraEx.ApertureChangeListener()
-        {
-            @Override
-            public void onApertureChange(CameraEx.ApertureInfo apertureInfo, CameraEx cameraEx)
-            {
-                // Disable aperture control if not available
-                m_haveApertureControl = apertureInfo.currentAperture != 0;
-                m_tvAperture.setVisibility(m_haveApertureControl ? View.VISIBLE : View.GONE);
-                /*
-                log(String.format("currentAperture %d currentAvailableMin %d currentAvailableMax %d\n",
-                        apertureInfo.currentAperture, apertureInfo.currentAvailableMin, apertureInfo.currentAvailableMax));
-                */
-                final String text = String.format("f%.1f", (float)apertureInfo.currentAperture / 100.0f);
-                m_tvAperture.setText(text);
-                if (m_notifyOnNextApertureChange)
-                {
-                    m_notifyOnNextApertureChange = false;
-                    showMessage(text);
-                }
-            }
-        });
 
-        m_supportedIsos = (List<Integer>)paramsModifier.getSupportedISOSensitivities();
-        m_curIso = paramsModifier.getISOSensitivity();
-        m_tvISO.setText(String.format("\uE488 %d", m_curIso));
+        updateExposureDisplay();
 
-        m_tvAperture.setText(String.format("f%.1f", (float)paramsModifier.getAperture() / 100.0f));
-
-        Pair<Integer, Integer> sp = paramsModifier.getShutterSpeed();
-        updateShutterSpeed(sp.first, sp.second);
 
         m_supportedPreviewMagnifications = (List<Integer>)paramsModifier.getSupportedPreviewMagnification();
         m_camera.setPreviewMagnificationListener(new CameraEx.PreviewMagnificationListener()
@@ -644,47 +542,15 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             }
         });
 
+        m_cmaeraControl.disableLENR();
+        m_cmaeraControl.setSilentShutter();
+
+
         loadDefaults();
         updateDriveModeImage();
         updateViewVisibility();
+        m_cmaeraControl.SetApsc(false);
 
-        //ForceManual();
-        InitApsc();
-
-        /* - triggers NPE
-        List<Integer> pf = params.getSupportedPreviewFormats();
-        if (pf != null)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SupportedPreviewFormats: ");
-            for (Integer i : pf)
-                sb.append(i.toString()).append(",");
-            sb.append("\n");
-            log(sb.toString());
-        }
-
-        /* - return null
-        List<Integer> pfr = params.getSupportedPreviewFrameRates();
-        if (pfr != null)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SupportedPreviewFrameRates: ");
-            for (Integer i : pfr)
-                sb.append(i.toString()).append(",");
-            sb.append("\n");
-            log(sb.toString());
-        }
-        List<Camera.Size> ps = params.getSupportedPreviewSizes();
-        if (ps != null)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SupportedPreviewSizes: ");
-            for (Camera.Size s : ps)
-                sb.append(s.toString()).append(",");
-            sb.append("\n");
-            log(sb.toString());
-        }
-        */
     }
 
     @Override
@@ -702,11 +568,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_camera = null;
     }
 
-    @Override
-    public void onShutterSpeedChange(CameraEx.ShutterSpeedInfo shutterSpeedInfo, CameraEx cameraEx)
-    {
-        updateShutterSpeed(shutterSpeedInfo.currentShutterSpeed_n, shutterSpeedInfo.currentShutterSpeed_d);
-    }
+
 
     @Override
     public void onShutter(int i, CameraEx cameraEx)
@@ -779,12 +641,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         updateTimelapseInterval();
     }
 
-    private Pair<Integer, Integer> getCurrentShutterSpeed()
-    {
-        final Camera.Parameters params = m_camera.getNormalCamera().getParameters();
-        final CameraEx.ParametersModifier paramsModifier = m_camera.createParametersModifier(params);
-        return paramsModifier.getShutterSpeed();
-    }
+
 
     private void updateTimelapseInterval()
     {
@@ -1017,9 +874,11 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             return true;
         }
 
-         if (m_dialMode == DialMode.apsc)
+        if (m_dialMode == DialMode.apsc)
         {
-            ToggleAApsc();
+            boolean Apsc=!m_cmaeraControl.GetApsc();
+            m_cmaeraControl.SetApsc(Apsc);
+            m_Apsc.setText(Apsc?"APSC":"FULL");
             return true;
         }
 
@@ -1180,7 +1039,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         if (DisplayStatus==0)
         {
             m_autoReviewControl.setPictureReviewTime(0);
-           Display.switchDisplayOutputTo(DisplayManager.DEVICE_ID_NONE);
+            Display.switchDisplayOutputTo(DisplayManager.DEVICE_ID_NONE);
         }
         else
         {
@@ -1188,6 +1047,14 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             Display.switchDisplayOutputTo(DisplayManager.DEVICE_ID_PANEL);
         }
     }
+
+    private void updateExposureDisplay()
+    {
+        m_tvISO.setText(m_exposureControl.getIsoTxt());
+        m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
+        m_tvAperture.setText(m_exposureControl.getApertureTxt());
+    }
+
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
@@ -1218,34 +1085,36 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         //ISO Speed
         if (scanCode==BUT_ISO_CW)
         {
-            int iso =  getNextIso(m_curIso);
-            if (iso== m_supportedIsos.get(m_supportedIsos.size() - 1))
-                iso=(m_supportedIsos.get(1));
-            setIso(iso);
-
+            m_exposureControl.incrementIso();
+            m_tvISO.setText(m_exposureControl.getIsoTxt());
         }
-
         if (scanCode==BUT_ISO_CCW)
         {
-            final int iso =  getPreviousIso(m_curIso);
-            if (iso != 0)
-                setIso(iso);
-            else
-                setIso(m_supportedIsos.get(m_supportedIsos.size() - 1));
-
+            m_exposureControl.decrementIso();
+            m_tvISO.setText(m_exposureControl.getIsoTxt());
         }
         if (scanCode==BUT_FRONT_CW)
-            m_camera.incrementShutterSpeed();
+        {
+            m_exposureControl.incrementShutterSpeed();
+            m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
+        }
 
         if (scanCode==BUT_FRONT_CCW)
-            m_camera.decrementShutterSpeed();
-
+        {
+            m_exposureControl.decrementShutterSpeed();
+            m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
+        }
         if (scanCode==BUT_REAR_CW)
-            m_camera.incrementAperture();
+        {
+            m_exposureControl.incrementAperture();
+            m_tvAperture.setText(m_exposureControl.getApertureTxt());
+        }
 
         if (scanCode==BUT_REAR_CCW)
-            m_camera.decrementAperture();
-
+        {
+            m_exposureControl.decrementAperture();
+            m_tvAperture.setText(m_exposureControl.getApertureTxt());
+        }
 
         // TODO: Use m_supportedPreviewMagnifications
         if (m_dialMode != DialMode.timelapseSetInterval && m_dialMode != DialMode.timelapseSetPicCount)
@@ -1327,45 +1196,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     }
 
 
-    private void ToggleAApsc()
-    {
-
-        final Camera.Parameters Currentparams = m_camera.getNormalCamera().getParameters();
-        final CameraEx.ParametersModifier CurrentparamsModifier = m_camera.createParametersModifier(Currentparams);
-        String ApscMode= CurrentparamsModifier.getApscMode();
-
-        final Camera.Parameters params = m_camera.createEmptyParameters();
-        final CameraEx.ParametersModifier modifier = m_camera.createParametersModifier(params);
 
 
-        if (ApscMode.equals(CameraEx.ParametersModifier.APSC_MODE_ON))
-        {
-            modifier.setApscMode(CameraEx.ParametersModifier.APSC_MODE_OFF);
-            m_Apsc.setText("FULL");
-        }
-        else
-        {
-            modifier.setApscMode(CameraEx.ParametersModifier.APSC_MODE_ON);
-            m_Apsc.setText("APSC");
 
-        }
-
-        //modifier.setApscMode(CameraEx.ParametersModifier.APSC_MODE_OFF);
-        m_camera.getNormalCamera().setParameters(params);
-
-
-    }
-
-    void InitApsc()
-    {
-
-        final Camera.Parameters params = m_camera.createEmptyParameters();
-        final CameraEx.ParametersModifier modifier = m_camera.createParametersModifier(params);
-
-        modifier.setApscMode(CameraEx.ParametersModifier.APSC_MODE_OFF);
-        m_Apsc.setText("FULL");
-        m_camera.getNormalCamera().setParameters(params);
-
-
-    }
 }
