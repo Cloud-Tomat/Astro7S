@@ -16,7 +16,7 @@ public class Preferences
     private static final String KEY_MIN_SHUTTER_SPEED = "minShutterSpeed";
     private static final String KEY_VIEW_FLAGS = "viewFlags";
 
-    public Preferences(Context context)
+    public Preferences(Context context  )
     {
         m_prefs = PreferenceManager.getDefaultSharedPreferences(context);
     }

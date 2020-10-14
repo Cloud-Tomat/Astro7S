@@ -55,6 +55,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private ImageView       m_ivTimelapse;
     private GridView        m_vGrid;
     private TextView        m_tvHint;
+    private TextView        m_tvParamSet;
     private FocusScaleView  m_focusScaleView;
     private View            m_lFocusScale;
 
@@ -81,8 +82,18 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
 
     private cCameraControl m_cmaeraControl;
+    private cExposureControl m_exposureControlSet[];
     private cExposureControl m_exposureControl;
+    private int m_currentParamSet;
 
+    private final Runnable  updateShutterSpeed = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
+        }
+    };
 
     private final Runnable  m_timelapseRunnable = new Runnable()
     {
@@ -131,7 +142,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private int             m_curPreviewMagnificationMaxPos;
     private PreviewNavView  m_previewNavView;
 
-    enum DialMode {  drive, timelapse, apsc, timelapseSetInterval, timelapseSetPicCount }
+    enum DialMode {  drive, timelapse, apsc, timelapseSetInterval, timelapseSetPicCount, paramset }
     private DialMode        m_dialMode;
 
     enum SceneMode { manual, aperture, shutter, other }
@@ -150,7 +161,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private boolean         m_takingPicture;
     private boolean         m_shutterKeyDown;
 
-    private boolean         m_haveTouchscreen;
 
     private static final int VIEW_FLAG_GRID         = 0x01;
     private static final int VIEW_FLAG_HISTOGRAM    = 0x02;
@@ -178,12 +188,15 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_tvAperture = (TextView)findViewById(R.id.tvAperture);
         m_tvShutter = (TextView)findViewById(R.id.tvShutter);
         m_tvISO = (TextView)findViewById(R.id.tvISO);
+        m_tvParamSet=(TextView) findViewById(R.id.tvParamSet);
+        m_tvParamSet.setText("1");
+
         m_Apsc = (TextView)findViewById(R.id.tvAPSC);
-        m_lExposure = (LinearLayout)findViewById(R.id.lExposure);
 
         m_Apsc.setText("FULL");
         m_Apsc.setVisibility(View.VISIBLE);
 
+        m_lExposure = (LinearLayout)findViewById(R.id.lExposure);
 
 
         m_tvLog = (TextView)findViewById(R.id.tvLog);
@@ -226,7 +239,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
         m_prefs = new Preferences(this);
 
-        m_haveTouchscreen = getDeviceInfo().getModel().compareTo("ILCE-5100") == 0;
+
     }
 
 
@@ -341,23 +354,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         }
     }
 
-    private void dumpList(List list, String name)
-    {
-        log(name);
-        log(": ");
-        if (list != null)
-        {
-            for (Object o : list)
-            {
-                log(o.toString());
-                log(" ");
-            }
-        }
-        else
-            log("null");
-        log("\n");
-    }
-
     private void togglePreviewMagnificationViews(boolean magnificationActive)
     {
         m_previewNavView.setVisibility(magnificationActive ? View.VISIBLE : View.GONE);
@@ -365,13 +361,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_lInfoBottom.setVisibility(magnificationActive ? View.GONE : View.VISIBLE);
         m_vHist.setVisibility(magnificationActive ? View.GONE : View.VISIBLE);
         setLeftViewVisibility(!magnificationActive);
-    }
-
-    private void setSceneMode(String mode)
-    {
-        Camera.Parameters params = m_camera.createEmptyParameters();
-        params.setSceneMode(mode);
-        m_camera.getNormalCamera().setParameters(params);
     }
 
     private void saveDefaults()
@@ -387,19 +376,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_prefs.setViewFlags(m_viewFlags);
 
         // TODO: Dial mode
-    }
-
-    private void disableLENR()
-    {
-        // Disable long exposure noise reduction
-        final Camera.Parameters params = m_camera.createEmptyParameters();
-        final CameraEx.ParametersModifier paramsModifier = m_camera.createParametersModifier(m_camera.getNormalCamera().getParameters());
-        final CameraEx.ParametersModifier modifier = m_camera.createParametersModifier(params);
-        if (paramsModifier.isSupportedLongExposureNR())
-            modifier.setLongExposureNR(false);
-        m_camera.getNormalCamera().setParameters(params);
-
-
     }
 
     private void loadDefaults()
@@ -430,7 +406,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         // TODO: Dial mode?
         setDialMode(DialMode.timelapse);
 
-        disableLENR();
+        m_cmaeraControl.disableLENR();
     }
 
 
@@ -441,7 +417,14 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         super.onResume();
         m_camera = CameraEx.open(0, null);
 
-        m_exposureControl=new cExposureControl(m_camera);
+        m_exposureControlSet=new cExposureControl[2];
+        m_exposureControlSet[0]=new cExposureControl(m_camera);
+        m_exposureControlSet[0].setShutterSpeedCallback(updateShutterSpeed);
+        m_exposureControlSet[1]=new cExposureControl(m_camera);
+        m_exposureControlSet[1].setShutterSpeedCallback(updateShutterSpeed);
+        m_exposureControl=m_exposureControlSet[0];
+        m_currentParamSet=0;
+
         m_cmaeraControl=new cCameraControl(m_camera);
 
         m_surfaceHolder.addCallback(this);
@@ -455,8 +438,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
         m_vGrid.setVideoRect(getDisplayManager().getDisplayedVideoRect());
 
-        //log(String.format("getSavingBatteryMode %s\n", getDisplayManager().getSavingBatteryMode()));
-        //log(String.format("getScreenGainControlType %s\n", getDisplayManager().getScreenGainControlType()));
 
         final Camera.Parameters params = m_camera.getNormalCamera().getParameters();
         final CameraEx.ParametersModifier paramsModifier = m_camera.createParametersModifier(params);
@@ -490,12 +471,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             @Override
             public void onChanged(boolean enabled, int magFactor, int magLevel, Pair coords, CameraEx cameraEx)
             {
-                // magnification / 100 = x.y
-                // magLevel = value passed to setPreviewMagnification
-                /*
-                m_tvLog.setText("onChanged enabled:" + String.valueOf(enabled) + " magFactor:" + String.valueOf(magFactor) + " magLevel:" +
-                    String.valueOf(magLevel) + " x:" + coords.first + " y:" + coords.second + "\n");
-                */
                 if (enabled)
                 {
                     //log("m_curPreviewMagnificationMaxPos: " + String.valueOf(m_curPreviewMagnificationMaxPos) + "\n");
@@ -823,6 +798,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
 
         m_Apsc.setTextColor(newMode == DialMode.apsc ? Color.GREEN : Color.WHITE);
+        m_tvParamSet.setTextColor(newMode == DialMode.paramset ? Color.GREEN : Color.WHITE);
+
 
         if (newMode == DialMode.drive)
             m_ivDriveMode.setColorFilter(Color.GREEN);
@@ -833,7 +810,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             m_ivTimelapse.setColorFilter(Color.GREEN);
         else
             m_ivTimelapse.setColorFilter(null);
-
     }
 
     private void movePreviewVertical(int delta)
@@ -895,9 +871,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             startTimelapseCountdown();
             return true;
         }
-
-
-
         else if (m_dialMode == DialMode.drive)
         {
             toggleDriveMode();
@@ -908,9 +881,22 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
             prepareTimelapse();
             return true;
         }
+        else if (m_dialMode== DialMode.paramset)
+        {
+            m_currentParamSet=(m_currentParamSet+1)%2;
+            UpdateParamSet();
+        }
 
         return false;
     }
+
+    private void UpdateParamSet()
+    {
+        m_exposureControl=m_exposureControlSet[m_currentParamSet];
+        updateExposureDisplay();
+    }
+
+
 
     @Override
     protected boolean onUpKeyDown()
@@ -960,6 +946,9 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
                     setDialMode(DialMode.apsc);
                     break;
                 case apsc:
+                    setDialMode(DialMode.paramset);
+                    break;
+                case paramset:
                     setDialMode(DialMode.drive);
                     break;
 
@@ -1053,6 +1042,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_tvISO.setText(m_exposureControl.getIsoTxt());
         m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
         m_tvAperture.setText(m_exposureControl.getApertureTxt());
+        m_tvParamSet.setText(String.valueOf(m_currentParamSet));
     }
 
 
@@ -1087,33 +1077,39 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         {
             m_exposureControl.incrementIso();
             m_tvISO.setText(m_exposureControl.getIsoTxt());
+            return super.onKeyDown(keyCode, event);
         }
         if (scanCode==BUT_ISO_CCW)
         {
             m_exposureControl.decrementIso();
             m_tvISO.setText(m_exposureControl.getIsoTxt());
+            return super.onKeyDown(keyCode, event);
         }
+
         if (scanCode==BUT_FRONT_CW)
         {
             m_exposureControl.incrementShutterSpeed();
-            m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
+            //display updated with runnable callback
+            return super.onKeyDown(keyCode, event);
         }
-
         if (scanCode==BUT_FRONT_CCW)
         {
             m_exposureControl.decrementShutterSpeed();
-            m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
+            //display updated with runnable callback
+            return super.onKeyDown(keyCode, event);
         }
+
         if (scanCode==BUT_REAR_CW)
         {
             m_exposureControl.incrementAperture();
             m_tvAperture.setText(m_exposureControl.getApertureTxt());
+            return super.onKeyDown(keyCode, event);
         }
-
         if (scanCode==BUT_REAR_CCW)
         {
             m_exposureControl.decrementAperture();
             m_tvAperture.setText(m_exposureControl.getApertureTxt());
+            return super.onKeyDown(keyCode, event);
         }
 
         // TODO: Use m_supportedPreviewMagnifications

@@ -6,8 +6,11 @@ import com.sony.scalar.hardware.CameraEx;
 
 import java.util.List;
 
-public class cExposureControl
-{    private CameraEx m_camera;
+public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
+{
+    private CameraEx m_camera;
+
+    private Runnable m_shuuterChangeCallback;
 
     //Exposure Parameters
     private int m_curIso;
@@ -36,7 +39,7 @@ public class cExposureControl
         m_curIso = paramsModifier.getISOSensitivity();
 
         // Init Shutter Spped
-        //m_camera.setShutterSpeedChangeListener(this);
+        m_camera.setShutterSpeedChangeListener(this);
         //m_camera.setShutterListener(this);
         m_ShutterSpeed = paramsModifier.getShutterSpeed();
 
@@ -59,7 +62,7 @@ public class cExposureControl
             m_curIso=m_supportedIsos.get(i+1);
 
         setIso(m_curIso);
-        while (m_curIso!=ReadIso());
+
     }
 
     public void decrementIso()
@@ -74,7 +77,7 @@ public class cExposureControl
             m_curIso=m_supportedIsos.get(i-1);
 
         setIso(m_curIso);
-        while (m_curIso!=ReadIso());
+
     }
 
 
@@ -122,7 +125,6 @@ public class cExposureControl
     {
         m_camera.incrementShutterSpeed();
         getShutterSpeed();
-
     }
 
     public void setShutterSpeed(Pair<Integer, Integer> ShuuterSpped)
@@ -148,11 +150,13 @@ public class cExposureControl
     public void incrementAperture()
     {
         m_camera.incrementAperture();
+        getAperture();
     }
 
     public void decrementAperture()
     {
         m_camera.decrementAperture();
+        getAperture();
     }
 
     public void setAperture()
@@ -181,4 +185,17 @@ public class cExposureControl
         return m_haveApertureControl;
     }
 
+    public void setShutterSpeedCallback(Runnable callback)
+    {
+        m_shuuterChangeCallback=callback;
+    }
+
+    @Override
+    public void onShutterSpeedChange(CameraEx.ShutterSpeedInfo shutterSpeedInfo, CameraEx cameraEx)
+    {
+        m_ShutterSpeed= Pair.create(shutterSpeedInfo.currentShutterSpeed_n,shutterSpeedInfo.currentShutterSpeed_d);
+        m_shuuterChangeCallback.run();
+
+
+    }
 }

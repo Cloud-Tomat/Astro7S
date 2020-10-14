@@ -3,6 +3,7 @@ package com.obsidium.bettermanual;
 import android.hardware.Camera;
 
 import com.sony.scalar.hardware.CameraEx;
+import com.sony.scalar.hardware.avio.DisplayManager;
 
 public class cCameraControl
 {
@@ -64,5 +65,7 @@ public class cCameraControl
 
         return (ApscMode.equals(CameraEx.ParametersModifier.APSC_MODE_ON));
     }
+
+
 
 }
