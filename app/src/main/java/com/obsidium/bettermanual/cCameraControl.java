@@ -5,12 +5,16 @@ import android.hardware.Camera;
 import com.sony.scalar.hardware.CameraEx;
 import com.sony.scalar.hardware.avio.DisplayManager;
 
+import java.util.List;
+
+
 public class cCameraControl
 {
     private CameraEx        m_camera;
 
     cCameraControl(CameraEx Camera)
     {
+
         m_camera=Camera;
     }
 
@@ -27,6 +31,7 @@ public class cCameraControl
         final Camera.Parameters params = m_camera.createEmptyParameters();
         final CameraEx.ParametersModifier paramsModifier = m_camera.createParametersModifier(m_camera.getNormalCamera().getParameters());
         final CameraEx.ParametersModifier modifier = m_camera.createParametersModifier(params);
+
         if (paramsModifier.isSupportedLongExposureNR())
             modifier.setLongExposureNR(false);
         m_camera.getNormalCamera().setParameters(params);
@@ -65,6 +70,8 @@ public class cCameraControl
 
         return (ApscMode.equals(CameraEx.ParametersModifier.APSC_MODE_ON));
     }
+
+
 
 
 

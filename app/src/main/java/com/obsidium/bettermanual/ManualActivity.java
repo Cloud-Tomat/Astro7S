@@ -19,6 +19,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 
 import com.github.ma1co.pmcademo.app.BaseActivity;
+import com.github.ma1co.pmcademo.app.Logger;
 import com.sony.scalar.hardware.CameraEx;
 import com.sony.scalar.hardware.avio.DisplayManager;
 import com.sony.scalar.sysutil.ScalarInput;
@@ -48,7 +49,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
     private TextView        m_Apsc;
     private TextView        m_tvLog;
     private TextView        m_tvMagnification;
-    private TextView        m_tvMsg;
+    public TextView        m_tvMsg;
     private HistogramView   m_vHist;
     private TableLayout     m_lInfoBottom;
     private ImageView       m_ivDriveMode;
@@ -82,7 +83,6 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
 
     private cCameraControl m_cmaeraControl;
-    private cExposureControl m_exposureControlSet[];
     private cExposureControl m_exposureControl;
     private int m_currentParamSet;
 
@@ -190,6 +190,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_tvISO = (TextView)findViewById(R.id.tvISO);
         m_tvParamSet=(TextView) findViewById(R.id.tvParamSet);
         m_tvParamSet.setText("1");
+        m_tvParamSet.setVisibility(View.GONE);
 
         m_Apsc = (TextView)findViewById(R.id.tvAPSC);
 
@@ -244,7 +245,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
 
 
-    private void showMessage(String msg)
+    public void showMessage(String msg)
     {
         m_tvMsg.setText(msg);
         m_tvMsg.setVisibility(View.VISIBLE);
@@ -417,12 +418,9 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         super.onResume();
         m_camera = CameraEx.open(0, null);
 
-        m_exposureControlSet=new cExposureControl[2];
-        m_exposureControlSet[0]=new cExposureControl(m_camera);
-        m_exposureControlSet[0].setShutterSpeedCallback(updateShutterSpeed);
-        m_exposureControlSet[1]=new cExposureControl(m_camera);
-        m_exposureControlSet[1].setShutterSpeedCallback(updateShutterSpeed);
-        m_exposureControl=m_exposureControlSet[0];
+        m_exposureControl=new cExposureControl(m_camera);
+        m_exposureControl.setShutterSpeedCallback(updateShutterSpeed);
+        m_exposureControl.ma=this;
         m_currentParamSet=0;
 
         m_cmaeraControl=new cCameraControl(m_camera);
@@ -798,7 +796,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
 
         m_Apsc.setTextColor(newMode == DialMode.apsc ? Color.GREEN : Color.WHITE);
-        m_tvParamSet.setTextColor(newMode == DialMode.paramset ? Color.GREEN : Color.WHITE);
+        //m_tvParamSet.setTextColor(newMode == DialMode.paramset ? Color.GREEN : Color.WHITE);
 
 
         if (newMode == DialMode.drive)
@@ -892,7 +890,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
     private void UpdateParamSet()
     {
-        m_exposureControl=m_exposureControlSet[m_currentParamSet];
+        m_exposureControl.ChangeSet(m_currentParamSet);
         updateExposureDisplay();
     }
 
@@ -946,7 +944,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
                     setDialMode(DialMode.apsc);
                     break;
                 case apsc:
-                    setDialMode(DialMode.paramset);
+                    setDialMode(DialMode.drive);
                     break;
                 case paramset:
                     setDialMode(DialMode.drive);
@@ -1042,7 +1040,7 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
         m_tvISO.setText(m_exposureControl.getIsoTxt());
         m_tvShutter.setText(m_exposureControl.getShutterSpeedTxt());
         m_tvAperture.setText(m_exposureControl.getApertureTxt());
-        m_tvParamSet.setText(String.valueOf(m_currentParamSet));
+        //m_tvParamSet.setText(String.valueOf(m_currentParamSet));
     }
 
 
@@ -1054,12 +1052,33 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
         if (scanCode==BUT_AEL)
         {
-            if (m_DisplayStatus == 1)
+            //android.hardware.Camera.Parameters params=m_camera.getNormalCamera().getParameters();
+            m_camera.incrementShutterSpeed();
+            m_camera.incrementShutterSpeed();
+
+            /*
+            Camera.Parameters params = m_camera.createEmptyParameters();
+            params.set("shutter-speed-numee",1);
+            params.set("shutter-speed-deno",60);
+            m_camera.getNormalCamera().setParameters(params);
+            params=m_camera.getNormalCamera().getParameters();
+            Logger.info(params.flatten());
+            */
+
+     
+//shutter-speed-deno
+//shutter-speed-nume
+/*            if (m_DisplayStatus == 1)
                 m_DisplayStatus=0;
             else
                 m_DisplayStatus=1;
             //showMessage((valueOf(m_DisplayStatus)));
-            SetDisplayOnOff(m_DisplayStatus);
+ //           SetDisplayOnOff(m_DisplayStatus);
+            Pair <Integer,Integer> Sc ;
+            Sc=new Pair<Integer, Integer>(1,30);
+
+            m_exposureControl.setShutterSpeed(Sc);
+ */
         }
 
         if (m_timelapseActive && scanCode != ScalarInput.ISV_KEY_ENTER)
