@@ -41,6 +41,7 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
 
     private String t_PreviewMode;
 
+    /*
     private final Runnable  adjustShutterSpeed = new Runnable()
     {
         @Override
@@ -53,7 +54,7 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
             decrementShutterSpeed();
         }
     };
-
+*/
 
     cExposureControl(CameraEx Camera)
     {
@@ -102,7 +103,7 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
         ma.showMessage(t_PreviewMode);
         return t_PreviewMode;
     }
-
+/*
     public void pullExposure()
     {
         final Camera.Parameters params = m_camera.getNormalCamera().getParameters();
@@ -140,13 +141,14 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
 
 
     }
-
+*/
 
     //Iso Control
     public void incrementIso()
     {
         getIso();
         int i=m_supportedIsos.indexOf(m_Iso[m_CurrentSet]);
+
         if ((i == -1) || (i>m_supportedIsos.size()-2))
             m_Iso[m_CurrentSet]=m_supportedIsos.get(1);
         else
@@ -160,9 +162,10 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
     {
         getIso();
         int i=m_supportedIsos.indexOf(m_Iso[m_CurrentSet]);
+
         if (i == -1)
             m_Iso[m_CurrentSet]=m_supportedIsos.get(1);
-        else if (i==1)
+        else if (i==4)
             m_Iso[m_CurrentSet]=m_supportedIsos.get(m_supportedIsos.size()-1);
         else
             m_Iso[m_CurrentSet]=m_supportedIsos.get(i-1);
@@ -232,7 +235,7 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
         fsp2=(float)sp2.first/(float)sp2.second;
         return fsp1-fsp2;
     }
-
+/*
     public void setShutterSpeed(Pair<Integer, Integer> ShutterSpeed)
     {
         m_shutterChanged=true;
@@ -240,6 +243,7 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
         m_handler.removeCallbacks(adjustShutterSpeed);
         m_handler.post(adjustShutterSpeed);
     }
+*/
 
     public Pair<Integer, Integer> getShutterSpeed()
     {
@@ -303,7 +307,7 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
     public void onShutterSpeedChange(CameraEx.ShutterSpeedInfo shutterSpeedInfo, CameraEx cameraEx)
     {
         boolean TargetReached;
-
+/*
         m_ShutterSpeed[m_CurrentSet]=new Pair <Integer, Integer>(shutterSpeedInfo.currentShutterSpeed_n,shutterSpeedInfo.currentShutterSpeed_d);
         //TargetReached=(m_TargetShutterSpeed.first==m_ShutterSpeed[m_CurrentSet].first) && (m_TargetShutterSpeed.second==m_ShutterSpeed[m_CurrentSet].second);
         TargetReached=m_TargetShutterSpeed.equals(m_ShutterSpeed[m_CurrentSet]);
@@ -315,11 +319,12 @@ public class cExposureControl implements CameraEx.ShutterSpeedChangeListener
         //Sc0=new String(CameraUtil.formatShutterSpeed(m_ShutterSpeed[m_CurrentSet].first, m_ShutterSpeed[m_CurrentSet].second));
         //Sc1=new String(CameraUtil.formatShutterSpeed(m_TargetShutterSpeed.first, m_TargetShutterSpeed.second));
         //ma.showMessage(Sc0+"/"+Sc1 + "/" + String.valueOf(TargetReached));
-
+*/
+        m_shutterChanged=false;
         if ( m_shutterChanged)
         {
-            m_handler.removeCallbacks(adjustShutterSpeed);
-            m_handler.post(adjustShutterSpeed);
+//            m_handler.removeCallbacks(adjustShutterSpeed);
+//            m_handler.post(adjustShutterSpeed);
         }
         else
         {

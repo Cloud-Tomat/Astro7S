@@ -890,8 +890,8 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
     private void UpdateParamSet()
     {
-        m_exposureControl.ChangeSet(m_currentParamSet);
-        updateExposureDisplay();
+        //m_exposureControl.ChangeSet(m_currentParamSet);
+        //updateExposureDisplay();
     }
 
 
@@ -1052,35 +1052,12 @@ public class ManualActivity extends BaseActivity implements SurfaceHolder.Callba
 
         if (scanCode==BUT_AEL)
         {
-            //android.hardware.Camera.Parameters params=m_camera.getNormalCamera().getParameters();
-            m_camera.incrementShutterSpeed();
-            m_camera.incrementShutterSpeed();
-
-            /*
-            Camera.Parameters params = m_camera.createEmptyParameters();
-            params.set("shutter-speed-numee",1);
-            params.set("shutter-speed-deno",60);
-            m_camera.getNormalCamera().setParameters(params);
-            params=m_camera.getNormalCamera().getParameters();
-            Logger.info(params.flatten());
-            */
-
-     
-//shutter-speed-deno
-//shutter-speed-nume
-/*            if (m_DisplayStatus == 1)
+            if (m_DisplayStatus == 1)
                 m_DisplayStatus=0;
             else
                 m_DisplayStatus=1;
-            //showMessage((valueOf(m_DisplayStatus)));
- //           SetDisplayOnOff(m_DisplayStatus);
-            Pair <Integer,Integer> Sc ;
-            Sc=new Pair<Integer, Integer>(1,30);
-
-            m_exposureControl.setShutterSpeed(Sc);
- */
         }
-
+        SetDisplayOnOff(m_DisplayStatus);
         if (m_timelapseActive && scanCode != ScalarInput.ISV_KEY_ENTER)
         {
             return true;
